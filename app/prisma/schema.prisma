@@ -22,16 +22,17 @@ model Post {
 model Room{
     id        Int      @id @default(autoincrement())
     name      String
-    members   String[]
+    members   User[]
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 }
 
 model User{
     id        Int      @id @default(autoincrement())
-    username  String
+    username  String   @unique
     password  String
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+    rooms     Room[]
 }
 

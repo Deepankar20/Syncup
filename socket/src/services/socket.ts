@@ -1,4 +1,5 @@
 import { Server } from "socket.io";
+const users: any = {};
 
 class SocketService {
   private _io: Server;
@@ -18,7 +19,19 @@ class SocketService {
     const io = this.io;
 
     io.on("connect", (socket) => {
-        console.log(`New Socket Connected : id: ${socket.id}`);
+      console.log(`New Socket Connected : id: ${socket.id}`);
+
+      const username = socket.handshake.query.username;
+
+      if (typeof username === "string") {
+        users[username] = socket.id;
+      }
+
+      socket.on("join:room", (data) => {
+        const { roomname } = JSON.parse(data);
+        console.log(roomname);
+        socket.join(roomname);
+      });
     });
   }
 
@@ -26,6 +39,5 @@ class SocketService {
     return this._io;
   }
 }
-
 
 export default SocketService;
