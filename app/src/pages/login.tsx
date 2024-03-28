@@ -1,19 +1,22 @@
 import React, { useState } from "react";
 import { api } from "@/utils/api";
-
+import { useRouter } from "next/router";
 
 function LoginForm() {
+  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const login = api.user.login.useMutation({
-    onSuccess:(data)=>{
-        if(data.code){
-            console.log(data.message);
-        }
-    }
-  })
+    onSuccess: (data) => {
+      if (data.code === 201) {
+        localStorage.setItem("username", data.data?.username as string);
+        router.push("/");
+        console.log(data.message);
+      }
+    },
+  });
 
   const handleSubmit = async (event: any) => {
     event.preventDefault();
@@ -28,13 +31,12 @@ function LoginForm() {
       console.log("Username:", username);
       console.log("Password:", password);
 
-      await login.mutate({username, password});
+      await login.mutate({ username, password });
 
       // Reset form fields
       setUsername("");
       setPassword("");
 
-      localStorage.setItem("username", username);
       setIsLoading(false);
     } catch (error) {
       console.error("Login error:", error);

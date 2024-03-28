@@ -48,7 +48,7 @@ const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       _socket.disconnect();
       setSocket(undefined);
     };
-  });
+  },[]);
 
   return (
     <SocketContext.Provider value={{ joinRoom }}>
