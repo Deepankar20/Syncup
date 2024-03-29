@@ -81,7 +81,7 @@ export default function Home() {
         {/* <RoomTable /> */}
         <div className="grid grid-cols-3 gap-4">
           {rooms.map((room) => {
-            return <Card room={room} />;
+            return <Card room={room}/>;
           })}
         </div>
       </div>

@@ -77,6 +77,7 @@ export default function Home() {
       <div className="flex flex-grow flex-col">
         {/* Add page content */}
         <SearchBar />
+        
       </div>
       {/* Component End */}
     </div>

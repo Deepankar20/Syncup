@@ -1,5 +1,9 @@
 import { Server } from "socket.io";
+import Peer from "peerjs";
+
 const users: any = {};
+const userRooms: any = {};
+// const peer = new Peer();
 
 class SocketService {
   private _io: Server;
@@ -20,6 +24,8 @@ class SocketService {
 
     io.on("connect", (socket) => {
       console.log(`New Socket Connected : id: ${socket.id}`);
+      console.log(users);
+      console.log(userRooms);
 
       const username = socket.handshake.query.username;
 
@@ -28,9 +34,16 @@ class SocketService {
       }
 
       socket.on("join:room", (data) => {
-        const { roomname } = JSON.parse(data);
+        const { roomname, username } = data;
         console.log(roomname);
+        if (userRooms[roomname]) {
+          userRooms[roomname].push(username);
+        } else {
+          userRooms[roomname] = [];
+          userRooms[roomname].push(username);
+        }
         socket.join(roomname);
+        io.to(roomname).emit("online:users:room", userRooms);
       });
     });
   }

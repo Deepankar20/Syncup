@@ -8,6 +8,7 @@
         "dev": "tsc-watch --onSuccess \"node dist/index.js\""
     },
     "dependencies": {
+        "peerjs": "^1.5.2",
         "socket.io": "^4.7.5",
         "tsc-watch": "^6.1.0"
     }

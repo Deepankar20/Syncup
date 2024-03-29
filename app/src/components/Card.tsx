@@ -1,6 +1,8 @@
 import React from "react";
 
-const Card = ({room}:any) => {
+const Card = ({ room }: any) => {
+  console.log(room);
+
   return (
     <div className="mx-auto max-w-md overflow-hidden rounded-lg bg-slate-800 shadow">
       {/* <img
