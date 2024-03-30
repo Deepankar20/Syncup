@@ -6,16 +6,7 @@ function Room() {
   return (
     <div>
       room
-      <button
-        onClick={() =>
-          joinRoom({
-            username: localStorage.getItem("username") as string,
-            roomname: "room",
-          })
-        }
-      >
-        join
-      </button>
+      <button>join</button>
     </div>
   );
 }
