@@ -25,16 +25,14 @@ class SocketService {
                 users[username] = socket.id;
             }
             socket.on("join-room", (roomId, userId) => {
-                // console.log(roomname);
-                // if (userRooms[roomname]) {
-                //   userRooms[roomname].push(username);
-                // } else {
-                //   userRooms[roomname] = [];
-                //   userRooms[roomname].push(username);
-                // }
                 socket.join(roomId);
-                // io.to(roomname).emit("online:users:room", userRooms);
-                socket.broadcast.to(roomId).emit('user-connected', userId);
+                io.to(roomId).emit("user-connected", userId);
+            });
+            socket.on("event:players:changed", (data, roomId, myId) => {
+                const players = JSON.parse(data);
+                console.log(players);
+                const newPlayers = players.filter((player) => player.user !== myId);
+                io.to(roomId).emit("event:players:changed:reply", newPlayers);
             });
         });
     }

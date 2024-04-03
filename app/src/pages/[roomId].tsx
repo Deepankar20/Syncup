@@ -5,41 +5,76 @@ import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import ReactPlayer from "react-player";
 
+interface players {
+  url: string;
+  muted: boolean;
+  playing: boolean;
+  user: string;
+}
+
 const Room = () => {
   const { roomId } = useRouter().query;
   const { peer, myId } = usePeer();
   const { socket } = useSocket();
   const { stream } = useMediaStream();
   const [users, setUsers] = useState({});
-  const [players, setPlayers] = useState({});
+  const [players, setPlayers] = useState<players[]>([]);
+  const [newUser, setNewUser] = useState();
+  const [_callerId, setCallerId] = useState();
+  const [playersToMap, setPlayersToMap] = useState<players[]>();
 
-  console.log(players);
+  const userSet = new Set();
+
+  function filterUniqueObjects(array: players[], property: any) {
+    return array.filter(
+      (obj: any, index: any, self: any) =>
+        index === self.findIndex((t: any) => t[property] === obj[property]),
+    );
+  }
+
+  useEffect(() => {
+    socket?.emit(
+      "event:players:changed",
+      JSON.stringify(players),
+      roomId,
+      myId,
+    );
+  }, []);
+
+  useEffect(() => {
+    if (!stream) return;
+    setPlayers((prev) => [
+      ...prev,
+      {
+        url: stream,
+        muted: true,
+        playing: true,
+        user: myId,
+      },
+    ]);
+  }, [stream, peer, socket, setPlayers]);
 
   useEffect(() => {
     if (!socket || !peer || !stream) return;
+
     const handleUserConnected = (newUser: any) => {
-      console.log(`user connected in room with userId ${newUser}`);
-      setPlayers((prev) => ({
-        ...prev,
-        [newUser]: {
-          url: stream,
-          muted: true,
-          playing: true,
-        },
-      }));
+      console.log(`user connected in ${roomId} with userId ${newUser}`);
+      setNewUser(newUser);
 
       const call = peer.call(newUser, stream);
 
       call.on("stream", (incomingStream: any) => {
         console.log(`incoming stream from ${newUser}`);
-        setPlayers((prev) => ({
+
+        setPlayers((prev) => [
           ...prev,
-          [newUser]: {
+          {
             url: incomingStream,
             muted: true,
             playing: true,
+            user: newUser,
           },
-        }));
+        ]);
 
         setUsers((prev) => ({
           ...prev,
@@ -47,29 +82,42 @@ const Room = () => {
         }));
       });
     };
+
+    // const handleUserChanged = (players: players[]) => {
+    //   console.log("kuch toh hua players array mein", players);
+    //   setPlayers(players);
+    // };
     socket.on("user-connected", handleUserConnected);
+    // socket.on("event:players:changed:reply", handleUserChanged);
 
     return () => {
       socket.off("user-connected", handleUserConnected);
+      // socket.off("event:players:changed:reply", handleUserChanged);
+
+      setPlayers((prev) => players.filter((player) => player.user !== newUser));
     };
-  }, [peer, setPlayers, socket, stream]);
+  }, [stream, peer, setPlayers, socket]);
 
   useEffect(() => {
     if (!peer || !stream) return;
+    console.log("players :", players);
     peer.on("call", (call: any) => {
       const { peer: callerId } = call;
       call.answer(stream);
 
       call.on("stream", (incomingStream: any) => {
         console.log(`incoming stream from ${callerId}`);
-        setPlayers((prev) => ({
+        setCallerId(callerId);
+
+        setPlayers((prev) => [
           ...prev,
-          [callerId]: {
+          {
             url: incomingStream,
             muted: true,
             playing: true,
+            user: callerId,
           },
-        }));
+        ]);
 
         setUsers((prev) => ({
           ...prev,
@@ -77,27 +125,46 @@ const Room = () => {
         }));
       });
     });
-  }, [peer, setPlayers, stream]);
+
+    return () => {
+      setPlayers((prev) => []);
+    };
+  }, [stream, peer, setPlayers, socket]);
 
   return (
-    <div>
-      {roomId}
+    <div className="grid grid-cols-4 gap-3">
+      {players &&
+        players.map((player, id) => {
+          try {
+            const { url, muted, playing, user } = player;
 
-      {Object.keys(players).map((playerId) => {
-        //@ts-ignore
-        const { url, muted, playing } = players[playerId];
-        console.log("hi");
+            if (userSet.has(user)) return;
 
-        return (
-          <ReactPlayer
-            url={url}
-            muted={muted}
-            playing={playing}
-            width="30%"
-            height="30%"
-          />
-        );
-      })}
+            if (!userSet.has(user)) {
+              userSet.add(user);
+            }
+
+            if (!url) return;
+            if (user === myId) return;
+
+            return (
+              <div className="border border-blue-500 ">
+                <ReactPlayer
+                  url={url}
+                  muted={muted}
+                  playing={playing}
+                  width="100%"
+                  height="100%"
+                  key={id}
+                />
+
+                <span>{user}</span>
+              </div>
+            );
+          } catch (error) {
+            console.log(error);
+          }
+        })}
     </div>
   );
 };
