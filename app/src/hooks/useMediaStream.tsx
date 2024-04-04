@@ -1,11 +1,25 @@
 import { useState, useEffect, useRef } from "react";
 
 const useMediaStream = () => {
-  const [state, setState] = useState(null);
+  const [state, setState] = useState<MediaStream>();
+  const [screen, setScreen] = useState();
   const isStreamSet = useRef(false);
 
   useEffect(() => {
     if (isStreamSet.current) return;
+    const displayMediaOptions = {
+      video: {
+        displaySurface: "browser",
+      },
+      audio: {
+        suppressLocalAudioPlayback: false,
+      },
+      preferCurrentTab: false,
+      selfBrowserSurface: "exclude",
+      systemAudio: "include",
+      surfaceSwitching: "include",
+      monitorTypeSurfaces: "include",
+    };
     isStreamSet.current = true;
     (async function initStream() {
       try {
@@ -13,10 +27,9 @@ const useMediaStream = () => {
           audio: true,
           video: true,
         });
-        console.log("setting your stream");
 
-        //@ts-ignore
-        setState(stream);
+
+        setState(stream)
       } catch (e) {
         console.log("Error in media navigator", e);
       }
@@ -25,6 +38,7 @@ const useMediaStream = () => {
 
   return {
     stream: state,
+    screen: screen,
   };
 };
 

@@ -47,6 +47,11 @@ class SocketService {
 
         io.to(roomId).emit("event:players:changed:reply", newPlayers);
       });
+
+      socket.on("event:user:leave", (myId, roomId)=>{
+        socket.join(roomId);
+        socket.to(roomId).emit("event:user:leave:reply", myId);
+      })
     });
   }
 

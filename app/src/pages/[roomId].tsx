@@ -21,9 +21,18 @@ const Room = () => {
   const [players, setPlayers] = useState<players[]>([]);
   const [newUser, setNewUser] = useState();
   const [_callerId, setCallerId] = useState();
-  const [playersToMap, setPlayersToMap] = useState<players[]>();
 
   const userSet = new Set();
+  const router = useRouter();
+
+  const leaveRoom = () => {
+    socket.emit("event:user:leave", myId, roomId);
+    console.log("leaving room", roomId);
+
+    stream?.getVideoTracks()[0]?.stop();
+
+    router.push("/");
+  };
 
   function filterUniqueObjects(array: players[], property: any) {
     return array.filter(
@@ -32,17 +41,13 @@ const Room = () => {
     );
   }
 
-  useEffect(() => {
-    socket?.emit(
-      "event:players:changed",
-      JSON.stringify(players),
-      roomId,
-      myId,
-    );
-  }, []);
+  // useEffect(()=>{
+
+  // })
 
   useEffect(() => {
     if (!stream) return;
+    //@ts-ignore
     setPlayers((prev) => [
       ...prev,
       {
@@ -83,24 +88,18 @@ const Room = () => {
       });
     };
 
-    // const handleUserChanged = (players: players[]) => {
-    //   console.log("kuch toh hua players array mein", players);
-    //   setPlayers(players);
-    // };
     socket.on("user-connected", handleUserConnected);
-    // socket.on("event:players:changed:reply", handleUserChanged);
 
     return () => {
       socket.off("user-connected", handleUserConnected);
-      // socket.off("event:players:changed:reply", handleUserChanged);
 
-      setPlayers((prev) => players.filter((player) => player.user !== newUser));
+      // setPlayers((prev) => players.filter((player) => player.user !== newUser));
     };
   }, [stream, peer, setPlayers, socket]);
 
   useEffect(() => {
     if (!peer || !stream) return;
-    console.log("players :", players);
+
     peer.on("call", (call: any) => {
       const { peer: callerId } = call;
       call.answer(stream);
@@ -131,8 +130,24 @@ const Room = () => {
     };
   }, [stream, peer, setPlayers, socket]);
 
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleUserLeave = (userId: players["user"]) => {
+      //@ts-ignore
+      users[userId]?.close();
+
+      const newPlayers = players.filter((player) => player.user !== userId);
+      setPlayers((_prev) => newPlayers);
+    };
+
+    socket.on("event:user:leave:reply", handleUserLeave);
+  }, [players, setPlayers, socket, users]);
+
   return (
     <div className="grid grid-cols-4 gap-3">
+      {/* <div>{screen && <ReactPlayer url={screen} playing={true} />}</div> */}
+
       {players &&
         players.map((player, id) => {
           try {
@@ -146,6 +161,8 @@ const Room = () => {
 
             if (!url) return;
             if (user === myId) return;
+
+            console.log(url);
 
             return (
               <div className="border border-blue-500 ">
@@ -165,6 +182,8 @@ const Room = () => {
             console.log(error);
           }
         })}
+
+      {peer && <button onClick={leaveRoom}>leave room</button>}
     </div>
   );
 };
