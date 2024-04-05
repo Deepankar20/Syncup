@@ -6,6 +6,7 @@ import RoomTable from "@/components/RoomTable";
 import Card from "@/components/Card";
 import { SearchBar } from "@/components/SearchBar";
 import { useEffect, useState } from "react";
+import { useSocket } from "@/context/SocketProvider";
 
 export default function Home() {
   const hello = api.post.hello.useQuery({ text: "from tRPC" });
@@ -28,6 +29,10 @@ export default function Home() {
     getAllRooms.mutate();
 
   },[])
+
+  // useEffect(()=>{
+  //   useSocket().socket.emit("online:Users");
+  // },[])
 
   return (
     <div className="flex h-screen w-screen overflow-y-scroll bg-slate-900 text-gray-300">
@@ -100,7 +105,8 @@ export default function Home() {
         {/* <RoomTable /> */}
         <div className="grid grid-cols-3 gap-4">
           {rooms.map((room) => {
-            return <Card room={room} />;
+            //@ts-ignore
+            return <Card room={room}/>;
           })}
         </div>
       </div>

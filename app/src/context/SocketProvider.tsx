@@ -9,6 +9,7 @@ import useMediaStream from "@/hooks/useMediaStream";
 interface ISocketContext {
   joinRoom: (data: IData) => any;
   socket: any;
+  onlineUser: any;
 }
 
 interface IData {
@@ -31,7 +32,7 @@ export const useSocket = () => {
 
 const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [socket, setSocket] = useState<Socket>();
-
+  const [onlineUser, setOnlineUser] = useState();
 
   const [players, setPlayers] = useState();
   const [users, setUsers] = useState();
@@ -46,30 +47,31 @@ const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     [socket],
   );
 
-  
-
-  const onJoinReply = useCallback((data: any) => {
-    console.log(data);
-  }, []);
+  const onlineUsers = useCallback(
+    (data: any) => {
+      setOnlineUser(data);
+    },
+    [socket],
+  );
 
   useEffect(() => {
     const username = localStorage.getItem("username");
     const _socket = io("http://localhost:8000", { query: { username } });
 
-    _socket.on("online:users:room", onJoinReply);
+    _socket.on("online:users", onlineUsers);
 
     setSocket((prev) => _socket);
 
     return () => {
       _socket.disconnect();
-      _socket.off("online:users:room", onJoinReply);
+      _socket.off("online:users", onlineUsers);
 
       setSocket(undefined);
     };
   }, []);
 
   return (
-    <SocketContext.Provider value={{ joinRoom, socket }}>
+    <SocketContext.Provider value={{ joinRoom, socket, onlineUser }}>
       {children}
     </SocketContext.Provider>
   );

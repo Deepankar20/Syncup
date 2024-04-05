@@ -28,9 +28,9 @@ const Room = () => {
 
   const leaveRoom = () => {
     socket.emit("event:user:leave", myId, roomId);
-    console.log("leaving room", roomId);
 
     stream?.getVideoTracks()[0]?.stop();
+    stream?.getAudioTracks()[0]?.stop();
 
     router.push("/");
   };
@@ -166,8 +166,6 @@ const Room = () => {
 
             if (!url) return;
             if (user === myId) return;
-
-            console.log(url);
 
             return (
               <div className="border border-blue-500">
