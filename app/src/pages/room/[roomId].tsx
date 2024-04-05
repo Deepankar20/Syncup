@@ -21,6 +21,7 @@ const Room = () => {
   const [players, setPlayers] = useState<players[]>([]);
   const [newUser, setNewUser] = useState();
   const [_callerId, setCallerId] = useState();
+  const [mounted, setMounted] = useState(false);
 
   const userSet = new Set();
   const router = useRouter();
@@ -41,9 +42,13 @@ const Room = () => {
     );
   }
 
-  // useEffect(()=>{
-
-  // })
+  useEffect(() => {
+    if (mounted) {
+      leaveRoom();
+    } else {
+      setMounted((_prev) => true);
+    }
+  }, []);
 
   useEffect(() => {
     if (!stream) return;
@@ -165,7 +170,7 @@ const Room = () => {
             console.log(url);
 
             return (
-              <div className="border border-blue-500 ">
+              <div className="border border-blue-500">
                 <ReactPlayer
                   url={url}
                   muted={muted}

@@ -5,10 +5,29 @@ import { api } from "@/utils/api";
 import RoomTable from "@/components/RoomTable";
 import Card from "@/components/Card";
 import { SearchBar } from "@/components/SearchBar";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const hello = api.post.hello.useQuery({ text: "from tRPC" });
-  const rooms = [1, 2, 3, 4, 6, 7, 8, 89, 3, 2];
+  const [rooms, setRooms] = useState([]);
+  console.log(rooms);
+  
+
+  const getAllRooms = api.room.getAllRooms.useMutation({
+    onSuccess: (data) => {
+      if (data.code === 201) {
+        console.log(data.message);
+        //@ts-ignore
+        setRooms(data?.data);
+      }
+    },
+  });
+
+  useEffect(()=>{
+
+    getAllRooms.mutate();
+
+  },[])
 
   return (
     <div className="flex h-screen w-screen overflow-y-scroll bg-slate-900 text-gray-300">
@@ -81,7 +100,7 @@ export default function Home() {
         {/* <RoomTable /> */}
         <div className="grid grid-cols-3 gap-4">
           {rooms.map((room) => {
-            return <Card room={room}/>;
+            return <Card room={room} />;
           })}
         </div>
       </div>
